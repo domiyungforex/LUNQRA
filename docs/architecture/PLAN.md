@@ -29,24 +29,30 @@ Initial repository contained only `agent.md` (preserved). Initialized repository
 - Primary bottom tabs layout (`(tabs)/_layout.tsx`) with Home, Discover, Create, Messages, and Profile screens.
 - Comprehensive test coverage for token cache, user bootstrap, and auth screens.
 
-## Next slice: Phase 2 — Onboarding
+### Phase 2 — Onboarding (Completed & Verified)
+- Comprehensive multi-step onboarding architecture:
+  1. Usage mode selection (`/(onboarding)/usage`): Individual, Student, Creator, Professional, Business.
+  2. Profile information (`/(onboarding)/profile`): display name, unique username, headline, short bio.
+  3. Interests selection (`/(onboarding)/interests`): curated topics with custom chips addition.
+  4. Capabilities / skills (`/(onboarding)/capabilities`): capability matrix with custom capability tags.
+  5. Location & preferences (`/(onboarding)/location`): primary location, remote-only toggle, travel readiness.
+  6. LUNQRA Agent introduction (`/(onboarding)/agent`): intent-engine agent capabilities walkthrough, notifications preference, and final activation.
+- `OnboardingProvider` draft state management preserving user progress across steps.
+- Supabase migration `20261004000002_phase2_onboarding_and_skills.sql` introducing `profile_skills`, `profile_interests`, indices, and strict owner RLS policies.
+- Idempotent `completeOnboarding` service mutating profile attributes, batch inserting skills and interests, and setting `onboarding_completed: true`.
+- Full verification: strict TypeScript, ESLint, 9/9 passing test suites (30 unit & screen tests), and multi-platform bundle export (Web, iOS, Android Hermes bytecode).
+
+## Next slice: Phase 3 — Profile & Social Graph
 
 Scope:
-- Multi-step onboarding flow in `app/(onboarding)`:
-  1. Usage mode selection (Individual, Student, Creator, Professional, Business)
-  2. Profile information (display name, username, bio, avatar)
-  3. Interests selection
-  4. Capabilities / skills
-  5. Location & preferences
-  6. LUNQRA Agent introduction
-  7. Notifications permission
-- Persist onboarding state to Supabase `profiles`, `profile_skills`, and `profile_interests` tables.
-- Update `onboarding_completed` flag in `profiles`.
-- Unit and flow test coverage.
+- Own profile view with completed capabilities, interests, and intent activity.
+- Public profile view with permissions and sanitized data.
+- Profile editing flow with validation.
+- Follow / connection system with mutual edge tracking.
+- Row-level security for profile privacy and connection requests.
 
 ## Subsequent phases (not implemented)
 
-3. Own/public/edit profile and follow system.
 4. Home, bounded discovery/search and social feed infrastructure.
 5. Intent creation, validated parsing, confirmation, persistence and lifecycle.
 6. Server embeddings, retrieval, hard filters, configurable scoring and match explanations.
