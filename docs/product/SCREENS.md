@@ -1,18 +1,25 @@
 # Screens
 
-Current routes:
-- `/`: foundation/startup and explicit missing-configuration state, with retry.
-- Unmatched route: accessible recovery back to `/`.
-- Global and route error boundaries: safe error copy with a retry action.
+## Active routes (Phase 1)
 
-Planned: welcome, sign-in/up, recovery; onboarding; Home/Discover/Create/Messages/Profile
-tabs; intent lifecycle and matches; public profiles; conversations; notifications;
-communities; agent; opportunities; marketplace; transaction history; settings.
+### Root
+- `/`: Entrypoint with session guard. Routes unauthenticated visitors to `/(auth)/welcome`, incomplete profiles to `/(onboarding)`, and active users to `/(tabs)`. Renders `FoundationScreen` if environment configuration is incomplete.
+- `+not-found.tsx`: Accessible recovery back to `/`.
 
-Create will open a sheet with Intent as the primary action, followed by post, opportunity,
-listing, event and community. No inert tab collection is added in Phase 0.
+### Authentication (`app/(auth)/`)
+- `welcome.tsx`: Welcome screen introducing LUNQRA's Human Intent Network value proposition with direct actions for Account Creation and Sign In.
+- `sign-in.tsx`: Email/password authentication via Clerk, with Zod validation, error handling, and session establishment.
+- `sign-up.tsx`: Account registration with email verification code step, Zod validation, and automatic session activation.
 
-Shared primitives currently cover screen, stack, row, text, heading, button, input,
-text area, card, divider, loading, empty and error states. Add the remaining composable
-controls and domain cards at their first feature usage. Tokens centralize all colors,
-spacing, typography, radii, touch targets, elevation, icon sizes and motion durations.
+### Onboarding (`app/(onboarding)/`)
+- `index.tsx`: Initial profile landing screen showing internal user ID and profile bootstrap status, with direct sign-out capability.
+
+### Primary navigation (`app/(tabs)/`)
+- `index.tsx`: Home tab with primary "What do you need?" intent prompt and active user session info.
+- `discover.tsx`: Discover tab shell.
+- `create.tsx`: Center Create tab shell.
+- `messages.tsx`: Messages tab shell.
+- `profile.tsx`: Profile tab shell with user metadata and sign-out action.
+
+## Error handling
+- Global and route error boundaries (`AppErrorBoundary`, `_layout.tsx` ErrorBoundary) provide actionable error states with retry mechanisms and scrubbed telemetry reporting.

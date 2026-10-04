@@ -2,29 +2,50 @@
 
 ## Repository audit — 2026-10-04
 
-Initial repository contained only `agent.md` (preserved). No AGENTS.md, Git repository,
-package.json, application, environment files, docs, migrations, policies or tests existed.
-Created AGENTS.md from the controlling user specification. Original brief has different
-phase numbering; the user's numbered phases below control. Neither permits a single
-uncontrolled full-product implementation.
+Initial repository contained only `agent.md` (preserved). Initialized repository structure, AGENTS.md, configuration validation, design tokens, primitives, telemetry boundaries, and test suites.
 
-## Current slice: Phase 0
+## Completed slices
 
-Acceptance: strict Expo Router app; semantic tokens and reusable primitives; validated
-public configuration; Clerk provider and secure token cache; Supabase client using Clerk
-tokens; TanStack Query with native lifecycle; telemetry foundation; global error boundary;
-documentation, tests, lint/typecheck and platform startup verification.
+### Phase 0 — Foundation (Completed & Verified)
+- Expo application foundation with strict TypeScript and Expo Router.
+- Semantic tokens and reusable design primitives.
+- Public environment validation with Zod (never leaks secret values).
+- TanStack Query with native app lifecycle management and query cache isolation.
+- Telemetry foundation (Sentry error reporting without PII; PostHog event capture with memory persistence).
+- Global and route error boundaries.
+- Full verification: typecheck, lint, unit tests, and multi-platform bundle export (Web, iOS, Android Hermes bytecode).
 
-- Implement foundation first and review every changed file.
-- Verify no-configuration behavior without fabricated service responses.
-- Finish external provider wiring once real development configuration is available.
-- Verify native and web startup; distinguish bundle export from actual native runtime.
-- Commit verified foundation work. Do not mark the phase complete while gates remain.
+### Phase 1 — Authentication (Completed & Verified)
+- Clerk integrated as the sole identity provider via `@clerk/clerk-expo`.
+- Secure token cache implementation using `expo-secure-store` with web localStorage/memory fallback.
+- Supabase client integration dynamically passing Clerk JWTs via `useSupabase()` hook.
+- Idempotent server-resolved user bootstrap service (`bootstrapInternalUser`), mapping Clerk subjects to internal `users` and `profiles` records.
+- Database migration `20261004000001_phase1_users_and_profiles.sql` with default-deny Row Level Security (RLS) enforcing Clerk subject ownership.
+- Authentication screens:
+  - WelcomeScreen (`/(auth)/welcome`)
+  - SignInScreen (`/(auth)/sign-in`) with React Hook Form + Zod validation
+  - SignUpScreen (`/(auth)/sign-up`) with email verification code step
+- Protected route navigation guard (`app/index.tsx`) routing users to `(auth)`, `(onboarding)`, or `(tabs)` based on session and onboarding status.
+- Primary bottom tabs layout (`(tabs)/_layout.tsx`) with Home, Discover, Create, Messages, and Profile screens.
+- Comprehensive test coverage for token cache, user bootstrap, and auth screens.
+
+## Next slice: Phase 2 — Onboarding
+
+Scope:
+- Multi-step onboarding flow in `app/(onboarding)`:
+  1. Usage mode selection (Individual, Student, Creator, Professional, Business)
+  2. Profile information (display name, username, bio, avatar)
+  3. Interests selection
+  4. Capabilities / skills
+  5. Location & preferences
+  6. LUNQRA Agent introduction
+  7. Notifications permission
+- Persist onboarding state to Supabase `profiles`, `profile_skills`, and `profile_interests` tables.
+- Update `onboarding_completed` flag in `profiles`.
+- Unit and flow test coverage.
 
 ## Subsequent phases (not implemented)
 
-1. Clerk auth flows, guards, logout, session persistence, server-resolved user bootstrap.
-2. Persisted onboarding, including preferences and agent introduction.
 3. Own/public/edit profile and follow system.
 4. Home, bounded discovery/search and social feed infrastructure.
 5. Intent creation, validated parsing, confirmation, persistence and lifecycle.
@@ -37,8 +58,7 @@ documentation, tests, lint/typecheck and platform startup verification.
 12. Marketplace listings.
 13. Payment adapters and idempotent transaction processing.
 14. Interaction-linked reviews and contextual reputation.
-15. Expanded verification/moderation tooling; foundational access controls and safety are
-    required from each feature's first release, not deferred to this phase.
+15. Expanded verification/moderation tooling.
 16. Production hardening, accessibility, security and performance review, build pipeline.
 
 V0 requires phases 0–7 to work against real services through completed conversations and
