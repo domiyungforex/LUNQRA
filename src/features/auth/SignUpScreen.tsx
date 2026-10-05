@@ -14,6 +14,8 @@ export function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const {
     control: signUpControl,
@@ -57,43 +59,107 @@ export function SignUpScreen() {
     }
   };
 
+  const onResendCode = async () => {
+    if (!isLoaded || resending) return;
+    setResending(true);
+    setServerError(null);
+    setResendSuccess(false);
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setResendSuccess(true);
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'errors' in err && Array.isArray((err as { errors: unknown[] }).errors)
+          ? ((err as { errors: { message?: string }[] }).errors[0]?.message ?? 'Failed to resend code')
+          : 'Failed to resend code. Please try again.';
+      setServerError(message);
+    } finally {
+      setResending(false);
+    }
+  };
+
   const onVerifySubmit = async (values: VerifyCodeFormValues) => {
     if (!isLoaded || submitting) return;
     setServerError(null);
     setSubmitting(true);
 
     try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code: values.code,
+      const result = await signUp.attemptEmailAddressVerification({
+        code: values.code.trim(),
       });
 
-      if (completeSignUp.status === 'complete') {
-        await setActive({ session: completeSignUp.createdSessionId });
-        router.replace('/');
-      } else {
-        setServerError('Verification could not be completed. Please try again.');
-      }
-    } catch (err: unknown) {
-      const firstError =
-        err && typeof err === 'object' && 'errors' in err && Array.isArray((err as { errors: unknown[] }).errors)
-          ? (err as { errors: { message?: string; code?: string }[] }).errors[0]
-          : null;
-      const message = firstError?.message ?? 'Failed to verify code. Please try again.';
+      // Clerk returns 'complete' when the signup is fully done.
+      // It may also return 'missing_requirements' if additional steps are pending,
+      // but the email is verified — we still activate the session in that case.
+      const emailVerified =
+        result.status === 'complete' ||
+        result.verifications?.emailAddress?.status === 'verified';
 
-      // If email was already verified, activate session or redirect to sign in immediately
+      if (result.status === 'complete' && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        router.replace('/');
+        return;
+      }
+
+      if (emailVerified && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        router.replace('/');
+        return;
+      }
+
+      if (emailVerified && !result.createdSessionId) {
+        // Session wasn't created yet — redirect to sign-in so the user can log in
+        router.replace('/(auth)/sign-in');
+        return;
+      }
+
+      // Verification was not accepted — show Clerk's own error reason if available
+      const verificationError = result.verifications?.emailAddress?.error;
+      const errorMessage =
+        verificationError?.longMessage ??
+        verificationError?.message ??
+        'Verification could not be completed. Please check the code and try again.';
+
+      setServerError(errorMessage);
+    } catch (err: unknown) {
+      const clerkErrors =
+        err && typeof err === 'object' && 'errors' in err && Array.isArray((err as { errors: unknown[] }).errors)
+          ? (err as { errors: { message?: string; longMessage?: string; code?: string }[] }).errors
+          : null;
+
+      const firstError = clerkErrors?.[0] ?? null;
+      const code = firstError?.code ?? '';
+      const message = firstError?.longMessage ?? firstError?.message ?? 'Failed to verify code. Please try again.';
+
+      // Handle already-verified edge cases
       if (
-        firstError?.code === 'already_verified' ||
+        code === 'already_verified' ||
+        code === 'form_identifier_not_found' ||
         message.toLowerCase().includes('already verified') ||
         signUp.status === 'complete'
       ) {
         if (signUp.createdSessionId) {
-          await setActive({ session: signUp.createdSessionId });
-          router.replace('/');
-          return;
-        } else {
-          router.replace('/(auth)/sign-in');
-          return;
+          try {
+            await setActive({ session: signUp.createdSessionId });
+            router.replace('/');
+            return;
+          } catch {
+            // Session activation failed — fall through to sign-in
+          }
         }
+        router.replace('/(auth)/sign-in');
+        return;
+      }
+
+      // Expired or invalid code
+      if (code === 'verification_expired') {
+        setServerError('Verification code has expired. Please request a new one.');
+        return;
+      }
+
+      if (code === 'form_code_incorrect') {
+        setServerError('Incorrect code. Please double-check and try again.');
+        return;
       }
 
       setServerError(message);
@@ -120,6 +186,12 @@ export function SignUpScreen() {
         {serverError ? (
           <Text accessibilityRole="alert" style={styles.serverError}>
             {serverError}
+          </Text>
+        ) : null}
+
+        {resendSuccess ? (
+          <Text style={styles.resendSuccess}>
+            ✓ New code sent — check your inbox.
           </Text>
         ) : null}
 
@@ -199,6 +271,13 @@ export function SignUpScreen() {
               loading={submitting}
               disabled={!isLoaded || submitting}
             />
+
+            <Button
+              label={resending ? 'Sending…' : 'Resend code'}
+              variant="ghost"
+              onPress={() => { void onResendCode(); }}
+              disabled={resending || submitting}
+            />
           </>
         )}
       </Card>
@@ -235,6 +314,11 @@ const styles = StyleSheet.create({
   serverError: {
     color: t.color.danger,
     fontSize: t.type.body,
+    paddingBottom: t.space.sm,
+  },
+  resendSuccess: {
+    color: t.color.success,
+    fontSize: t.type.caption,
     paddingBottom: t.space.sm,
   },
   footerStack: {
