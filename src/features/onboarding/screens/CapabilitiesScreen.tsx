@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, Heading, Input, Row, Screen, Stack, Text } from '@/design-system/primitives';
 import { tokens as t } from '@/design-system/tokens';
 import { useOnboardingDraft } from '../onboarding-context';
+import { OnboardingProgressHeader } from '../components/OnboardingProgressHeader';
 
 const DEFAULT_CAPABILITIES = [
   'React Native',
@@ -23,7 +24,9 @@ const DEFAULT_CAPABILITIES = [
 export function CapabilitiesScreen() {
   const router = useRouter();
   const { draft, updateDraft } = useOnboardingDraft();
-  const [selected, setSelected] = useState<string[]>(draft.skills.length > 0 ? draft.skills : ['React Native']);
+  const [selected, setSelected] = useState<string[]>(
+    draft.skills.length > 0 ? draft.skills : ['React Native']
+  );
   const [customSkill, setCustomSkill] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -54,21 +57,27 @@ export function CapabilitiesScreen() {
 
   return (
     <Screen>
-      <Text style={styles.stepIndicator}>Step 4 of 6</Text>
+      <OnboardingProgressHeader currentStep={4} />
 
       <Stack style={styles.header}>
-        <Heading style={styles.title}>What are your key capabilities?</Heading>
-        <Text tone="secondary">
+        <Heading style={styles.title} serif>What are your key capabilities?</Heading>
+        <Text tone="secondary" style={styles.subtitle}>
           Highlight skills so the intent matching engine can find you when members express needs.
         </Text>
       </Stack>
 
-      <Card>
+      <Card style={styles.cardContainer}>
         {error ? (
           <Text accessibilityRole="alert" style={styles.error}>
             {error}
           </Text>
         ) : null}
+
+        <View style={styles.metaRow}>
+          <Text style={styles.selectionCount}>
+            {selected.length} {selected.length === 1 ? 'skill' : 'skills'} selected
+          </Text>
+        </View>
 
         <View style={styles.chipGrid}>
           {DEFAULT_CAPABILITIES.map(skill => {
@@ -80,11 +89,12 @@ export function CapabilitiesScreen() {
                 accessibilityLabel={skill}
                 accessibilityState={{ selected: isSelected }}
                 onPress={() => toggleSkill(skill)}
-                style={[styles.chip, isSelected ? styles.selectedChip : undefined]}
+                style={[styles.chip, isSelected ? styles.selectedChip : styles.unselectedChip]}
               >
-                <Text style={[styles.chipText, isSelected ? styles.selectedChipText : undefined]}>
+                <Text style={[styles.chipText, isSelected ? styles.selectedChipText : styles.unselectedChipText]}>
                   {skill}
                 </Text>
+                {isSelected ? <Text style={styles.checkIcon}> ✓</Text> : null}
               </Pressable>
             );
           })}
@@ -100,67 +110,102 @@ export function CapabilitiesScreen() {
               onSubmitEditing={e => addCustomSkill(e.nativeEvent.text)}
             />
           </View>
-          <Button label="Add" onPress={() => addCustomSkill()} disabled={!customSkill.trim()} />
+          <Button
+            label="Add"
+            onPress={() => addCustomSkill()}
+            disabled={!customSkill.trim()}
+          />
         </Row>
 
-        <Button label="Continue" onPress={handleContinue} />
+        <View style={styles.buttonWrapper}>
+          <Button label="Continue" onPress={handleContinue} />
+        </View>
       </Card>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  stepIndicator: {
-    fontSize: t.type.caption,
-    fontWeight: t.weight.medium,
-    color: t.color.brandPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
   header: {
-    paddingVertical: t.space.md,
+    paddingVertical: t.space.sm,
     gap: t.space.xs,
   },
   title: {
-    fontSize: t.type.title,
-    lineHeight: t.lineHeight.title,
+    fontSize: 28,
+    lineHeight: 34,
+    color: t.color.textPrimary,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: t.color.textSecondary,
+  },
+  cardContainer: {
+    marginVertical: t.space.sm,
+    backgroundColor: t.color.surface,
+    borderColor: t.color.border,
+    borderRadius: t.radius.md,
+    padding: t.space.md,
+  },
+  metaRow: {
+    marginBottom: t.space.sm,
+  },
+  selectionCount: {
+    fontSize: 12,
+    fontWeight: t.weight.medium,
+    color: t.color.brandPrimary,
   },
   chipGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: t.space.sm,
-    marginVertical: t.space.md,
+    gap: 8,
+    marginBottom: t.space.md,
   },
   chip: {
-    paddingVertical: t.space.sm,
-    paddingHorizontal: t.space.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
     borderRadius: t.radius.pill,
+    borderWidth: 1.5,
+  },
+  unselectedChip: {
     backgroundColor: t.color.surfaceMuted,
-    borderWidth: 1,
     borderColor: t.color.border,
   },
   selectedChip: {
-    backgroundColor: t.color.brandPrimary,
+    backgroundColor: 'rgba(212, 255, 50, 0.12)',
     borderColor: t.color.brandPrimary,
   },
   chipText: {
-    fontSize: t.type.caption,
-    color: t.color.textPrimary,
+    fontSize: 13,
     fontWeight: t.weight.medium,
   },
+  unselectedChipText: {
+    color: t.color.textPrimary,
+  },
   selectedChipText: {
-    color: t.color.textInverse,
+    color: t.color.brandPrimary,
+  },
+  checkIcon: {
+    color: t.color.brandPrimary,
+    fontSize: 12,
+    fontWeight: t.weight.bold,
   },
   customRow: {
     gap: t.space.sm,
     alignItems: 'flex-end',
-    marginBottom: t.space.md,
+    marginBottom: t.space.sm,
   },
   customInputWrapper: {
     flex: 1,
   },
   error: {
     color: t.color.danger,
-    fontSize: t.type.caption,
+    fontSize: 13,
+    marginBottom: t.space.sm,
+  },
+  buttonWrapper: {
+    marginTop: t.space.md,
   },
 });

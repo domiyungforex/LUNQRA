@@ -1,9 +1,11 @@
-import { StyleSheet, Pressable } from 'react-native';
+import React from 'react';
+import { StyleSheet, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, Heading, Screen, Stack, Text } from '@/design-system/primitives';
 import { tokens as t } from '@/design-system/tokens';
 import { useOnboardingDraft } from '../onboarding-context';
 import { USAGE_MODES, type UsageMode } from '../types';
+import { OnboardingProgressHeader } from '../components/OnboardingProgressHeader';
 
 export function UsageScreen() {
   const router = useRouter();
@@ -19,11 +21,11 @@ export function UsageScreen() {
 
   return (
     <Screen>
-      <Text style={styles.stepIndicator}>Step 1 of 6</Text>
+      <OnboardingProgressHeader currentStep={1} canGoBack={false} />
 
       <Stack style={styles.header}>
-        <Heading style={styles.title}>How do you plan to use LUNQRA?</Heading>
-        <Text tone="secondary">
+        <Heading style={styles.title} serif>How do you plan to use LUNQRA?</Heading>
+        <Text tone="secondary" style={styles.subtitle}>
           This personalizes your recommendations. You can participate in all modes anytime.
         </Text>
       </Stack>
@@ -39,63 +41,108 @@ export function UsageScreen() {
               accessibilityState={{ selected }}
               onPress={() => handleSelect(mode.id)}
             >
-              <Card style={[styles.card, selected ? styles.selectedCard : undefined]}>
-                <Stack style={styles.cardHeader}>
-                  <Heading style={styles.cardTitle}>{mode.title}</Heading>
-                  {selected ? <Text style={styles.selectedBadge}>Selected</Text> : null}
-                </Stack>
-                <Text tone="secondary">{mode.description}</Text>
+              <Card style={[styles.card, selected ? styles.selectedCard : styles.unselectedCard]}>
+                <View style={styles.cardHeader}>
+                  <Heading style={[styles.cardTitle, selected ? styles.selectedCardTitle : undefined]}>
+                    {mode.title}
+                  </Heading>
+                  {selected ? (
+                    <View style={styles.selectedBadge}>
+                      <Text style={styles.selectedBadgeText}>Selected</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.radioDot} />
+                  )}
+                </View>
+                <Text tone="secondary" style={styles.cardDesc}>
+                  {mode.description}
+                </Text>
               </Card>
             </Pressable>
           );
         })}
       </Stack>
 
-      <Button label="Continue" onPress={handleContinue} />
+      <View style={styles.buttonWrapper}>
+        <Button label="Continue" onPress={handleContinue} />
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  stepIndicator: {
-    fontSize: t.type.caption,
-    fontWeight: t.weight.medium,
-    color: t.color.brandPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
   header: {
-    paddingVertical: t.space.md,
+    paddingVertical: t.space.sm,
     gap: t.space.xs,
   },
   title: {
-    fontSize: t.type.title,
-    lineHeight: t.lineHeight.title,
+    fontSize: 28,
+    lineHeight: 34,
+    color: t.color.textPrimary,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: t.color.textSecondary,
   },
   optionsList: {
-    gap: t.space.md,
+    gap: t.space.sm,
     marginVertical: t.space.md,
   },
   card: {
+    padding: t.space.md,
+    borderRadius: t.radius.md,
     borderWidth: 1.5,
+  },
+  unselectedCard: {
     borderColor: t.color.border,
+    backgroundColor: t.color.surface,
   },
   selectedCard: {
     borderColor: t.color.brandPrimary,
-    backgroundColor: '#F0F3FF',
+    backgroundColor: 'rgba(212, 255, 50, 0.06)',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 4,
   },
   cardTitle: {
-    fontSize: t.type.body,
+    fontSize: 16,
     fontWeight: t.weight.bold,
+    color: t.color.textPrimary,
+  },
+  selectedCardTitle: {
+    color: t.color.brandPrimary,
+  },
+  radioDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: t.color.borderStrong,
   },
   selectedBadge: {
-    fontSize: t.type.caption,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: t.radius.pill,
+    backgroundColor: 'rgba(212, 255, 50, 0.15)',
+    borderWidth: 1,
+    borderColor: t.color.brandPrimary,
+  },
+  selectedBadgeText: {
+    fontSize: 11,
     fontWeight: t.weight.bold,
     color: t.color.brandPrimary,
+    letterSpacing: 0.5,
+  },
+  cardDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  buttonWrapper: {
+    marginTop: t.space.md,
+    marginBottom: t.space.xl,
   },
 });

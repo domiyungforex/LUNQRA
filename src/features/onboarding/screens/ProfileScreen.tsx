@@ -1,4 +1,5 @@
-import { StyleSheet } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +7,7 @@ import { Button, Card, Heading, Input, Screen, Stack, Text, TextArea } from '@/d
 import { tokens as t } from '@/design-system/tokens';
 import { useOnboardingDraft } from '../onboarding-context';
 import { profileInfoSchema, type ProfileInfoFormValues } from '../types';
+import { OnboardingProgressHeader } from '../components/OnboardingProgressHeader';
 
 export function ProfileScreen() {
   const router = useRouter();
@@ -43,16 +45,31 @@ export function ProfileScreen() {
 
   return (
     <Screen>
-      <Text style={styles.stepIndicator}>Step 2 of 6</Text>
+      <OnboardingProgressHeader currentStep={2} />
 
       <Stack style={styles.header}>
-        <Heading style={styles.title}>Create your public profile</Heading>
-        <Text tone="secondary">
+        <Heading style={styles.title} serif>Create your public profile</Heading>
+        <Text tone="secondary" style={styles.subtitle}>
           This represents your presence across the intent network.
         </Text>
       </Stack>
 
-      <Card>
+      {/* Avatar preview icon */}
+      <View style={styles.avatarRow}>
+        <View style={styles.avatarCircle}>
+          <Text style={styles.avatarInitials}>
+            {(draft.displayName || 'Alex').slice(0, 2).toUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.avatarMeta}>
+          <Text style={styles.avatarTitle}>Network Identity</Text>
+          <Text tone="secondary" style={styles.avatarHint}>
+            Your persona is visible to matching peers.
+          </Text>
+        </View>
+      </View>
+
+      <Card style={styles.formCard}>
         <Controller
           control={control}
           name="displayName"
@@ -147,31 +164,80 @@ export function ProfileScreen() {
           )}
         />
 
-        <Button
-          label="Continue"
-          onPress={() => {
-            void handleSubmit(onSubmit)();
-          }}
-        />
+        <View style={styles.buttonWrapper}>
+          <Button
+            label="Continue"
+            onPress={() => {
+              void handleSubmit(onSubmit)();
+            }}
+          />
+        </View>
       </Card>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  stepIndicator: {
-    fontSize: t.type.caption,
-    fontWeight: t.weight.medium,
-    color: t.color.brandPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
   header: {
-    paddingVertical: t.space.md,
+    paddingVertical: t.space.sm,
     gap: t.space.xs,
   },
   title: {
-    fontSize: t.type.title,
-    lineHeight: t.lineHeight.title,
+    fontSize: 28,
+    lineHeight: 34,
+    color: t.color.textPrimary,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: t.color.textSecondary,
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.md,
+    marginVertical: t.space.sm,
+    padding: t.space.md,
+    backgroundColor: t.color.surface,
+    borderRadius: t.radius.md,
+    borderWidth: 1,
+    borderColor: t.color.border,
+  },
+  avatarCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(212, 255, 50, 0.15)',
+    borderWidth: 1.5,
+    borderColor: t.color.brandPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontSize: 18,
+    fontWeight: t.weight.bold,
+    color: t.color.brandPrimary,
+  },
+  avatarMeta: {
+    flex: 1,
+  },
+  avatarTitle: {
+    fontSize: 14,
+    fontWeight: t.weight.bold,
+    color: t.color.textPrimary,
+  },
+  avatarHint: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  formCard: {
+    marginVertical: t.space.sm,
+    backgroundColor: t.color.surface,
+    borderColor: t.color.border,
+    borderRadius: t.radius.md,
+    padding: t.space.md,
+  },
+  buttonWrapper: {
+    marginTop: t.space.md,
   },
 });
