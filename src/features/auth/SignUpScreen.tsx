@@ -97,13 +97,13 @@ export function SignUpScreen() {
 
       if (result.status === 'complete' && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        router.replace('/');
+        router.replace('/(onboarding)');
         return;
       }
 
       if (emailVerified && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        router.replace('/');
+        router.replace('/(onboarding)');
         return;
       }
 
@@ -141,7 +141,7 @@ export function SignUpScreen() {
         if (signUp.createdSessionId) {
           try {
             await setActive({ session: signUp.createdSessionId });
-            router.replace('/');
+            router.replace('/(onboarding)');
             return;
           } catch {
             // Session activation failed — fall through to sign-in

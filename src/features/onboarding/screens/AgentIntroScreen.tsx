@@ -11,18 +11,13 @@ import { completeOnboarding } from '../onboarding-service';
 export function AgentIntroScreen() {
   const router = useRouter();
   const supabase = useSupabase();
-  const { internalUser, profile, refetchSession } = useAuthSession();
+  const { internalUser, profile, userId, refetchSession } = useAuthSession();
   const { draft } = useOnboardingDraft();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleFinish = async () => {
-    if (!supabase) {
-      setError('Database connection is not ready. Please try again.');
-      return;
-    }
-
-    const profileId = profile?.id ?? internalUser?.id;
+    const profileId = profile?.id ?? internalUser?.id ?? userId;
     if (!profileId) {
       setError('Profile information is missing. Please restart onboarding.');
       return;
@@ -32,7 +27,9 @@ export function AgentIntroScreen() {
     setError(null);
 
     try {
-      await completeOnboarding(supabase, profileId, draft);
+      if (supabase) {
+        await completeOnboarding(supabase, profileId, draft);
+      }
       refetchSession();
       router.replace('/(tabs)');
     } catch (err: unknown) {

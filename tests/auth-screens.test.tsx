@@ -88,6 +88,8 @@ describe('Auth Screens', () => {
           identifier: 'user@example.com',
           password: 'securePassword123',
         });
+        expect(mockSignInSetActive).toHaveBeenCalledWith({ session: 'sess_signin_123' });
+        expect(mockReplace).toHaveBeenCalledWith('/(onboarding)');
       });
     });
   });
@@ -99,6 +101,25 @@ describe('Auth Screens', () => {
 
       await fireEvent.press(screen.getByRole('button', { name: 'Already have an account? Sign in' }));
       expect(mockPush).toHaveBeenCalledWith('/(auth)/sign-in');
+    });
+
+    test('verifies OTP code and redirects to onboarding', async () => {
+      await render(<SignUpScreen />);
+
+      await fireEvent.changeText(screen.getByLabelText('Email address'), 'newuser@example.com');
+      await fireEvent.changeText(screen.getByLabelText('Password'), 'securePassword123');
+      await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Verify your email')).toBeTruthy();
+      });
+
+      await fireEvent.changeText(screen.getByLabelText('Verification code'), '123456');
+      await fireEvent.press(screen.getByRole('button', { name: 'Verify and complete' }));
+
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith('/(onboarding)');
+      });
     });
   });
 });
