@@ -1,5 +1,1 @@
-import { Redirect } from 'expo-router';
-
-export default function OnboardingIndex() {
-  return <Redirect href="/(onboarding)/usage" />;
-}
+export { UsageScreen as default } from '@/features/onboarding/screens/UsageScreen';

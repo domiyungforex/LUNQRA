@@ -39,7 +39,7 @@ export function SignInScreen() {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
-        router.replace('/(onboarding)');
+        router.replace('/(onboarding)/usage');
       } else {
         setServerError('Additional authentication steps are required. Please check your email.');
       }

@@ -89,7 +89,7 @@ describe('Auth Screens', () => {
           password: 'securePassword123',
         });
         expect(mockSignInSetActive).toHaveBeenCalledWith({ session: 'sess_signin_123' });
-        expect(mockReplace).toHaveBeenCalledWith('/(onboarding)');
+        expect(mockReplace).toHaveBeenCalledWith('/(onboarding)/usage');
       });
     });
   });
@@ -118,7 +118,7 @@ describe('Auth Screens', () => {
       await fireEvent.press(screen.getByRole('button', { name: 'Verify and complete' }));
 
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith('/(onboarding)');
+        expect(mockReplace).toHaveBeenCalledWith('/(onboarding)/usage');
       });
     });
   });

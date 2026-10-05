@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSignUp } from '@clerk/clerk-expo';
+import { useSignUp, useSignIn } from '@clerk/clerk-expo';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Card, Heading, Input, Screen, Stack, Text } from '@/design-system/primitives';
@@ -11,6 +11,8 @@ import { signUpSchema, verifyCodeSchema, type SignUpFormValues, type VerifyCodeF
 export function SignUpScreen() {
   const router = useRouter();
   const { signUp, setActive, isLoaded } = useSignUp();
+  const { signIn, isLoaded: isSignInLoaded } = useSignIn();
+  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const [pendingVerification, setPendingVerification] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,10 +41,11 @@ export function SignUpScreen() {
     if (!isLoaded || submitting) return;
     setServerError(null);
     setSubmitting(true);
+    setCredentials({ email: values.email.trim(), password: values.password });
 
     try {
       await signUp.create({
-        emailAddress: values.email,
+        emailAddress: values.email.trim(),
         password: values.password,
       });
 
@@ -88,28 +91,38 @@ export function SignUpScreen() {
         code: values.code.trim(),
       });
 
-      // Clerk returns 'complete' when the signup is fully done.
-      // It may also return 'missing_requirements' if additional steps are pending,
-      // but the email is verified — we still activate the session in that case.
       const emailVerified =
         result.status === 'complete' ||
         result.verifications?.emailAddress?.status === 'verified';
 
-      if (result.status === 'complete' && result.createdSessionId) {
-        await setActive({ session: result.createdSessionId });
-        router.replace('/(onboarding)');
+      const sessionId = result.createdSessionId ?? signUp.createdSessionId;
+
+      if (sessionId) {
+        await setActive({ session: sessionId });
+        router.replace('/(onboarding)/usage');
         return;
       }
 
-      if (emailVerified && result.createdSessionId) {
-        await setActive({ session: result.createdSessionId });
-        router.replace('/(onboarding)');
-        return;
-      }
+      if (emailVerified) {
+        // Attempt automatic sign in with the saved credentials
+        if (credentials && isSignInLoaded) {
+          try {
+            const signInResult = await signIn.create({
+              identifier: credentials.email,
+              password: credentials.password,
+            });
 
-      if (emailVerified && !result.createdSessionId) {
-        // Session wasn't created yet — redirect to sign-in so the user can log in
-        router.replace('/(auth)/sign-in');
+            if (signInResult.status === 'complete' && signInResult.createdSessionId) {
+              await setActive({ session: signInResult.createdSessionId });
+              router.replace('/(onboarding)/usage');
+              return;
+            }
+          } catch (autoSignInErr) {
+            console.warn('Auto sign-in after verification fallback:', autoSignInErr);
+          }
+        }
+
+        router.replace('/(onboarding)/usage');
         return;
       }
 
@@ -138,16 +151,35 @@ export function SignUpScreen() {
         message.toLowerCase().includes('already verified') ||
         signUp.status === 'complete'
       ) {
-        if (signUp.createdSessionId) {
+        const sessionId = signUp.createdSessionId;
+        if (sessionId) {
           try {
-            await setActive({ session: signUp.createdSessionId });
-            router.replace('/(onboarding)');
+            await setActive({ session: sessionId });
+            router.replace('/(onboarding)/usage');
             return;
           } catch {
-            // Session activation failed — fall through to sign-in
+            // fall through to auto sign-in
           }
         }
-        router.replace('/(auth)/sign-in');
+
+        if (credentials && isSignInLoaded) {
+          try {
+            const signInResult = await signIn.create({
+              identifier: credentials.email,
+              password: credentials.password,
+            });
+
+            if (signInResult.status === 'complete' && signInResult.createdSessionId) {
+              await setActive({ session: signInResult.createdSessionId });
+              router.replace('/(onboarding)/usage');
+              return;
+            }
+          } catch (autoErr) {
+            console.warn('Auto sign-in fallback failed:', autoErr);
+          }
+        }
+
+        router.replace('/(onboarding)/usage');
         return;
       }
 

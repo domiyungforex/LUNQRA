@@ -29,7 +29,7 @@ export default function Index() {
   }
 
   if (!onboardingCompleted) {
-    return <Redirect href="/(onboarding)" />;
+    return <Redirect href="/(onboarding)/usage" />;
   }
 
   return <Redirect href="/(tabs)" />;
