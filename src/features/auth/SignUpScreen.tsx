@@ -74,10 +74,28 @@ export function SignUpScreen() {
         setServerError('Verification could not be completed. Please try again.');
       }
     } catch (err: unknown) {
-      const message =
+      const firstError =
         err && typeof err === 'object' && 'errors' in err && Array.isArray((err as { errors: unknown[] }).errors)
-          ? ((err as { errors: { message?: string }[] }).errors[0]?.message ?? 'Invalid verification code')
-          : 'Failed to verify code. Please try again.';
+          ? (err as { errors: { message?: string; code?: string }[] }).errors[0]
+          : null;
+      const message = firstError?.message ?? 'Failed to verify code. Please try again.';
+
+      // If email was already verified, activate session or redirect to sign in immediately
+      if (
+        firstError?.code === 'already_verified' ||
+        message.toLowerCase().includes('already verified') ||
+        signUp.status === 'complete'
+      ) {
+        if (signUp.createdSessionId) {
+          await setActive({ session: signUp.createdSessionId });
+          router.replace('/');
+          return;
+        } else {
+          router.replace('/(auth)/sign-in');
+          return;
+        }
+      }
+
       setServerError(message);
     } finally {
       setSubmitting(false);

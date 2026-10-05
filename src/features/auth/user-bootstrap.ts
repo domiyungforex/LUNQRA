@@ -27,6 +27,32 @@ export async function bootstrapInternalUser(
     .maybeSingle();
 
   if (findError) {
+    // If the remote table has not yet been migrated, provide a graceful fallback so the app does not freeze
+    if (findError.code === 'PGRST205' || findError.message.includes('schema cache')) {
+      console.warn('Supabase tables not yet detected. Run apply_all_migrations.sql in your Supabase SQL editor.');
+      const fallbackId = '00000000-0000-0000-0000-000000000000';
+      return {
+        user: {
+          id: fallbackId,
+          clerk_id: clerkId,
+          email,
+          phone,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        profile: {
+          id: fallbackId,
+          display_name: displayName,
+          username: (email ? email.split('@')[0] : null) ?? 'user',
+          avatar_url: null,
+          bio: null,
+          location: null,
+          onboarding_completed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      };
+    }
     throw new Error(`Failed to query internal user: ${findError.message}`);
   }
 

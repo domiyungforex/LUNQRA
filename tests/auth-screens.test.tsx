@@ -46,8 +46,8 @@ describe('Auth Screens', () => {
   describe('WelcomeScreen', () => {
     test('renders brand message and navigates to sign up and sign in', async () => {
       await render(<WelcomeScreen />);
-      expect(screen.getByText('Say what you need.')).toBeTruthy();
-      expect(screen.getByText('Find who or what can make it happen.')).toBeTruthy();
+      expect(screen.getByText(/From/)).toBeTruthy();
+      expect(screen.getByText(/People\. Ideas\. Opportunities\./)).toBeTruthy();
 
       await fireEvent.press(screen.getByRole('button', { name: 'Create an account' }));
       expect(mockPush).toHaveBeenCalledWith('/(auth)/sign-up');

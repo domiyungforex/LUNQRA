@@ -1,98 +1,186 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, ImageBackground, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, Card, Heading, Screen, Stack, Text } from '@/design-system/primitives';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Heading, Text } from '@/design-system/primitives';
 import { tokens as t } from '@/design-system/tokens';
 
 export function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <Screen>
-      <Text style={styles.brand}>LUNQRA</Text>
+    <View style={styles.container}>
+      <ImageBackground
+        source={require('@/../assets/images/celestial_welcome.jpg')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={['rgba(11, 8, 14, 0.4)', 'rgba(11, 8, 14, 0.2)', 'rgba(11, 8, 14, 0.85)', '#0B080E']}
+          locations={[0, 0.35, 0.75, 1]}
+          style={styles.gradient}
+        >
+          <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+            {/* Header Brand */}
+            <View style={styles.header}>
+              <Text style={styles.brandTitle}>L U N Q R A</Text>
+              <Text style={styles.brandSubtitle}>b y   A T E M</Text>
+            </View>
 
-      <Stack style={styles.hero}>
-        <Heading style={styles.promise}>Say what you need.</Heading>
-        <Text tone="secondary" style={styles.subhead}>
-          Find who or what can make it happen.
-        </Text>
-      </Stack>
+            {/* Hero Copy */}
+            <View style={styles.heroSection}>
+              <Heading style={styles.title} serif>
+                From{'\n'}intention{'\n'}to impact<Text style={styles.period}>.</Text>
+              </Heading>
+              <Text style={styles.subtitle}>
+                People. Ideas. Opportunities.{'\n'}A brighter you.
+              </Text>
+            </View>
 
-      <Card style={styles.featureCard}>
-        <Stack style={styles.featureStack}>
-          <Stack style={styles.featureItem}>
-            <Heading style={styles.featureTitle}>Human Intent Network</Heading>
-            <Text tone="secondary">
-              Describe your project, need, or offer naturally. LUNQRA parses and matches you with verified talent and opportunities.
-            </Text>
-          </Stack>
+            {/* Call to Actions */}
+            <View style={styles.actionSection}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Create an account"
+                onPress={() => router.push('/(auth)/sign-up')}
+                style={({ pressed }) => [
+                  styles.getStartedButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text style={styles.getStartedText}>Get Started</Text>
+                <Text style={styles.arrowText}>→</Text>
+              </Pressable>
 
-          <Stack style={styles.featureItem}>
-            <Heading style={styles.featureTitle}>Verified Connections</Heading>
-            <Text tone="secondary">
-              Move seamlessly from intent to realtime conversation, outcome, and reputation.
-            </Text>
-          </Stack>
-        </Stack>
-      </Card>
-
-      <Stack style={styles.actions}>
-        <Button
-          label="Create an account"
-          onPress={() => router.push('/(auth)/sign-up')}
-        />
-        <Button
-          label="Sign in"
-          onPress={() => router.push('/(auth)/sign-in')}
-        />
-      </Stack>
-
-      <Text tone="muted" style={styles.footer}>
-        A human intent network by ATEM
-      </Text>
-    </Screen>
+              <View style={styles.signInRow}>
+                <View style={styles.dividerLine} />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Sign in"
+                  onPress={() => router.push('/(auth)/sign-in')}
+                  style={({ pressed }) => [
+                    styles.signInButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <Text style={styles.signInText}>Sign in</Text>
+                </Pressable>
+                <View style={styles.dividerLine} />
+              </View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  brand: {
-    fontSize: t.type.title,
+  container: {
+    flex: 1,
+    backgroundColor: t.color.background,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    paddingHorizontal: t.space.xl,
+    justifyContent: 'space-between',
+  },
+  header: {
+    paddingTop: t.space.md,
+    gap: 3,
+  },
+  brandTitle: {
+    fontSize: 18,
     fontWeight: t.weight.bold,
-    color: t.color.brandPrimary,
-    letterSpacing: 1.5,
+    letterSpacing: 6,
+    color: t.color.textPrimary,
   },
-  hero: {
-    paddingVertical: t.space.xl,
-    gap: t.space.sm,
+  brandSubtitle: {
+    fontSize: 9,
+    letterSpacing: 4,
+    color: t.color.textSecondary,
+    textTransform: 'uppercase',
   },
-  promise: {
-    fontSize: t.type.display,
-    lineHeight: t.lineHeight.display,
-  },
-  subhead: {
-    fontSize: t.type.body,
-    lineHeight: t.lineHeight.body,
-  },
-  featureCard: {
-    backgroundColor: t.color.surface,
-  },
-  featureStack: {
-    gap: t.space.lg,
-  },
-  featureItem: {
-    gap: t.space.xs,
-  },
-  featureTitle: {
-    fontSize: t.type.body,
-    fontWeight: t.weight.bold,
-  },
-  actions: {
-    gap: t.space.md,
-    marginTop: t.space.lg,
-  },
-  footer: {
+  heroSection: {
     marginTop: 'auto',
-    paddingTop: t.space.xl,
-    fontSize: t.type.caption,
-    textAlign: 'center',
+    marginBottom: t.space.xxl,
+    gap: t.space.md,
+  },
+  title: {
+    fontSize: 48,
+    lineHeight: 52,
+    color: t.color.textPrimary,
+    fontWeight: '400',
+  },
+  period: {
+    color: t.color.accentCoral,
+    fontSize: 52,
+    fontWeight: '700',
+  },
+  subtitle: {
+    fontSize: t.type.body,
+    lineHeight: 22,
+    color: t.color.textSecondary,
+    fontWeight: t.weight.regular,
+  },
+  actionSection: {
+    gap: t.space.lg,
+    paddingBottom: t.space.lg,
+  },
+  getStartedButton: {
+    backgroundColor: t.color.brandPrimary,
+    borderRadius: t.radius.pill,
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: t.space.sm,
+    shadowColor: t.color.brandPrimary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  buttonPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.98 }],
+  },
+  getStartedText: {
+    color: t.color.textInverse,
+    fontSize: 18,
+    fontWeight: t.weight.bold,
+  },
+  arrowText: {
+    color: t.color.textInverse,
+    fontSize: 20,
+    fontWeight: t.weight.bold,
+  },
+  signInRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: t.space.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  signInButton: {
+    paddingVertical: t.space.xs,
+    paddingHorizontal: t.space.sm,
+  },
+  signInText: {
+    color: t.color.textPrimary,
+    fontSize: t.type.body,
+    fontWeight: t.weight.medium,
   },
 });
